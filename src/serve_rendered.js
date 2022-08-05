@@ -334,13 +334,17 @@ module.exports = {
 
           const formatQuality = (options.formatQuality || {})[format];
 
+          image.toColourspace('b-w');
+          image.removeAlpha();
+
           if (format === 'png') {
-            image.png({ adaptiveFiltering: false });
+            image.png({ adaptiveFiltering: false, dither: 1.0, colours: 4});
           } else if (format === 'jpeg') {
             image.jpeg({ quality: formatQuality || 80 });
           } else if (format === 'webp') {
             image.webp({ quality: formatQuality || 90 });
           }
+
           image.toBuffer((err, buffer, info) => {
             if (!buffer) {
               return res.status(404).send('Not found');
@@ -378,12 +382,12 @@ module.exports = {
         z > 22 || x >= Math.pow(2, z) || y >= Math.pow(2, z)) {
         return res.status(404).send('Out of bounds');
       }
-      const tileSize = 256;
+      const tileSize = 64;
       const tileCenter = mercator.ll([
         ((x + 0.5) / (1 << z)) * (256 << z),
         ((y + 0.5) / (1 << z)) * (256 << z)
       ], z);
-      return respondImage(item, z, tileCenter[0], tileCenter[1], 0, 0,
+      return respondImage(item, z-2, tileCenter[0], tileCenter[1], 0, 0,
         tileSize, tileSize, scale, format, res, next);
     });
 
